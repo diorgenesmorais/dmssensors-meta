@@ -1,9 +1,9 @@
 [submodule "microservices/device-management"]
 	path = microservices/device-management
-	url = git@github-personal:diorgenesmorais/dmssensors-device-management.git
+	url = git@github.com:diorgenesmorais/dmssensors-device-management.git
 [submodule "microservices/temperature-monitoring"]
 	path = microservices/temperature-monitoring
-	url = git@github-personal:diorgenesmorais/dmssensors-temperature-monitoring.git
+	url = git@github.com:diorgenesmorais/dmssensors-temperature-monitoring.git
 [submodule "microservices/temperature-processing"]
 	path = microservices/temperature-processing
-	url = git@github-personal:diorgenesmorais/dmssensors-temperature-processing.git
+	url = git@github.com:diorgenesmorais/dmssensors-temperature-processing.git
