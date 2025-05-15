@@ -1,0 +1,16 @@
+services:
+  dmssensors-rabbitmq:
+    image: rabbitmq:3-management
+    restart: no
+    container_name: dmssensors-rabbitmq
+    ports:
+      - "15672:15672"  # RabbitMQ management UI
+      - "5672:5672"    # RabbitMQ AMQP protocol
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+      - dmssensors-rabbitmq-data:/var/lib/rabbitmq
+
+volumes:
+  dmssensors-rabbitmq-data:
