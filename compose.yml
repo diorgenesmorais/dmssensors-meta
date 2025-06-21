@@ -1,7 +1,6 @@
 services:
   dmssensors-rabbitmq:
     image: rabbitmq:3-management
-    restart: no
     container_name: dmssensors-rabbitmq
     ports:
       - "15672:15672"  # RabbitMQ management UI
@@ -12,6 +11,18 @@ services:
     volumes:
       - dmssensors-rabbitmq-data:/var/lib/rabbitmq
       - ./configs/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    restart: on-failure
+    healthcheck:
+      test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
 
 volumes:
   dmssensors-rabbitmq-data:
