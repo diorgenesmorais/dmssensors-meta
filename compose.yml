@@ -2,6 +2,9 @@ services:
   dmssensors-rabbitmq:
     image: rabbitmq:3-management
     container_name: dmssensors-rabbitmq
+    profiles:
+      - queues
+      - app
     ports:
       - "15672:15672"  # RabbitMQ management UI
       - "5672:5672"    # RabbitMQ AMQP protocol
@@ -28,6 +31,9 @@ services:
 
   device-management:
     container_name: device-management-backend
+    profiles:
+      - services
+      - app
     build:
       context: ./microservices/device-management
       args:
@@ -57,6 +63,9 @@ services:
 
   temperature-management:
     container_name: temperature-monitoring-backend
+    profiles:
+      - services
+      - app
     build:
       context: ./microservices/temperature-monitoring
       args:
@@ -86,6 +95,9 @@ services:
 
   temperature-processing:
     container_name: temperature-processing-backend
+    profiles:
+      - services
+      - app
     build:
       context: ./microservices/temperature-processing
       args:
