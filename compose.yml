@@ -11,6 +11,8 @@ services:
     volumes:
       - dmssensors-rabbitmq-data:/var/lib/rabbitmq
       - ./configs/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+    networks:
+      - dms-net
     restart: on-failure
     healthcheck:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
@@ -21,8 +23,39 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1'
-          memory: 1024M
+          cpus: '0.5'
+          memory: 512M
+
+  device-management:
+    container_name: device-management-backend
+    build:
+      context: ./microservices/device-management
+      args:
+        SERVER_PORT: ${SERVER_PORT_MANAGEMENT}
+        TZ: ${TZ}
+    ports:
+      - '${HOST_PORT_MANAGEMENT:-8080}:${SERVER_PORT_MANAGEMENT:-8080}'
+    env_file:
+      - .env
+    networks:
+      - dms-net
+    depends_on:
+      dmssensors-rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "curl -f http://localhost:$SERVER_PORT_MANAGEMENT/actuator/health | grep 'UP' || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
 
 volumes:
   dmssensors-rabbitmq-data:
+
+networks:
+  dms-net:
