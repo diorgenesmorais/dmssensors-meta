@@ -5,9 +5,9 @@ services:
     ports:
       - "15672:15672"  # RabbitMQ management UI
       - "5672:5672"    # RabbitMQ AMQP protocol
-    environment:
-      RABBITMQ_DEFAULT_USER: rabbitmq
-      RABBITMQ_DEFAULT_PASS: rabbitmq
+    env_file:
+      - .env
+
     volumes:
       - dmssensors-rabbitmq-data:/var/lib/rabbitmq
       - ./configs/rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
@@ -18,12 +18,12 @@ services:
       test: [ "CMD", "rabbitmq-diagnostics", "ping" ]
       interval: 15s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      retries: 3
+      start_period: 15s
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '1'
           memory: 512M
 
   device-management:
@@ -42,6 +42,7 @@ services:
     depends_on:
       dmssensors-rabbitmq:
         condition: service_healthy
+    restart: no
     healthcheck:
       test: [ "CMD", "sh", "-c", "curl -f http://localhost:$SERVER_PORT_MANAGEMENT/actuator/health | grep 'UP' || exit 1" ]
       interval: 15s
@@ -51,7 +52,65 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '0.5'
+          cpus: '1'
+          memory: 512M
+
+  temperature-management:
+    container_name: temperature-monitoring-backend
+    build:
+      context: ./microservices/temperature-monitoring
+      args:
+        SERVER_PORT: ${SERVER_PORT_MONITORING}
+        TZ: ${TZ}
+    ports:
+      - '${HOST_PORT_MONITORING:-8082}:${SERVER_PORT_MONITORING:-8082}'
+    env_file:
+      - .env
+    networks:
+      - dms-net
+    depends_on:
+      dmssensors-rabbitmq:
+        condition: service_healthy
+    restart: no
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "curl -f http://localhost:$SERVER_PORT_MONITORING/actuator/health | grep 'UP' || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  temperature-processing:
+    container_name: temperature-processing-backend
+    build:
+      context: ./microservices/temperature-processing
+      args:
+        SERVER_PORT: ${SERVER_PORT_PROCESSING}
+        TZ: ${TZ}
+    ports:
+      - '${HOST_PORT_PROCESSING:-8081}:${SERVER_PORT_PROCESSING:-8081}'
+    env_file:
+      - .env
+    networks:
+      - dms-net
+    depends_on:
+      dmssensors-rabbitmq:
+        condition: service_healthy
+    restart: no
+    healthcheck:
+      test: [ "CMD", "sh", "-c", "curl -f http://localhost:$SERVER_PORT_PROCESSING/actuator/health | grep 'UP' || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
           memory: 512M
 
 volumes:
